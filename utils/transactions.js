@@ -30,5 +30,8 @@ module.exports = {
     signTxin: (transaction, indexToSign, privateKey, options) => {
         const dataToSign = getTxinDataForSign(transaction, indexToSign, privateKey, options)
         return crypto.signData(privateKey, crypto.hash(crypto.hash(dataToSign)), 'base64');
+    },
+    hashTransaction: (transaction) => {
+
     }
 };

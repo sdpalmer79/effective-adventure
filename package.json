@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/sdpalmer79/effective-adventure/issues"
   },
-  "homepage": "https://github.com/sdpalmer79/effective-adventure#readme"
+  "homepage": "https://github.com/sdpalmer79/effective-adventure#readme",
+  "dependencies": {
+    "crypto": "^1.0.1"
+  }
 }
