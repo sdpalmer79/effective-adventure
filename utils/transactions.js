@@ -1,37 +1,39 @@
+const storage = require('../storage');
 const crypto = require("./crypto.js");
 
-function getTxinData(transaction, indexToSign, prevTxout) {
-    return transaction.txins.reduce((data, txin, currIndex) => {
+function getTxinDataForSign(transaction, indexToSign) {
+    const txin = transaction.txins[indexToSign];
+    const prevTxout = storage.mongo.fetchTxout(txin.previousOutput, txin.vout);
+
+    const txins = transaction.txins.reduce((data, txin, currIndex) => {
         let txinData;
         if (currIndex === indexToSign) {
             const script = prevTxout.utxos[txin.previousOutput.vout].script;
             txinData = `${txin.previousOutput.txId}${script}${txin.previousOutput.vout}`;
         } else {
-            txinData =  `${txin.previousOutput.txId}${txin.previousOutput.vout}`;
+            txinData = `${txin.previousOutput.txId}${txin.previousOutput.vout}`;
         }
         return data.concat(txinData);
     }, '');
+
+    const utxos = transaction.utxos.reduce((data, utxo) => data.concat(`${utxo.value}${utxo.script}`), '');
+    return `${transaction.version}${txins}${utxos}${transaction.locktime}`.toString('utf8');
 }
 
-function getUtxoData(transaction) {
-    return transaction.utxos.reduce((data, utxo) => data.concat(`${utxo.value}${utxo.script}`), '');
-}
-
-function getTxinDataForSign(transaction, indexToSign, options) {
-    const txin = transaction.txins[indexToSign];
-    const prevTxout = fetchTxout(txin.previousOutput, txin.vout);
-
-    const txins = getTxinData(transaction, indexToSign, prevTxout)
-    const utxos = getUtxoData(transaction);
+function getTxinDataForHash(transaction) {
+    const txins = transaction.txins.reduce((data, txin, currIndex) => data.concat(`${txin.previousOutput.txId}${txin.verifyScript}${txin.previousOutput.vout}`), '');
+    const utxos = transaction.utxos.reduce((data, utxo) => data.concat(`${utxo.value}${utxo.script}`), '');
     return `${transaction.version}${txins}${utxos}${transaction.locktime}`.toString('utf8');
 }
 
 module.exports = {
-    signTxin: (transaction, indexToSign, privateKey, options) => {
-        const dataToSign = getTxinDataForSign(transaction, indexToSign, privateKey, options)
-        return crypto.signData(privateKey, crypto.hash(crypto.hash(dataToSign)), 'base64');
+    getTxinDataForSign: (transaction, indexToSign) => getTxinDataForSign(transaction, indexToSign),
+    signTxin: (transaction, indexToSign, privateKey) => {
+        const dataToSign = getTxinDataForSign(transaction, indexToSign, privateKey)
+        return crypto.signData(privateKey, crypto.hash(crypto.hash(dataToSign)));
     },
     hashTransaction: (transaction) => {
-
+        const dataToHash = getTxinDataForHash(transaction);
+        return crypto.hash(crypto.hash(dataToHash));
     }
 };

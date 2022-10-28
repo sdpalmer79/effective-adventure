@@ -3,12 +3,13 @@ const transactions = require('./transactions');
 
 module.exports = {
     crypto: {
-        hash: (data, encoding) => crypto.hash(data, encoding),
-        signData: (privateKey, data, encoding) => crypto.signData(privateKey, data, encoding),
-        verifySign: (publicKey, signature, data, encoding) => crypto.verifySign(publicKey, signature, data, encoding)
-    }
-    ,
+        hash: (data) => crypto.hash(data),
+        signData: (privateKey, data) => crypto.signData(privateKey, data),
+        verifySign: (publicKey, signature, data) => crypto.verifySign(publicKey, signature, data)
+    },
     transactions: {
-        signTxin: (transaction, indexToSign, privateKey, options) => transactions.signTxin(transaction, indexToSign, privateKey, options)
+        getTxinDataForSign: (transaction, indexToSign) => transactions.getTxinDataForSign(transaction, indexToSign),
+        signTxin: (transaction, indexToSign, privateKey) => transactions.signTxin(transaction, indexToSign, privateKey),
+        hashTransaction: (transaction) => transactions.hashTransaction(transaction)
     }
 };

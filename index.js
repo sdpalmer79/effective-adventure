@@ -1,4 +1,6 @@
 const {transactions} = require('./utils');
+const opCodes = require('./op_codes');
+const {generateKeyPairSync} = require('crypto');
 
 //add address version field to tranaction
 //sighash - which parts of transaction are hashed for signature
@@ -25,29 +27,16 @@ const transaction = {
     txId: '', //hash of transaction
 }
 
-function fetchTxout() {
-    return {
-        utxos: [
-            {
-                value: 5,
-                script: 'OP_DUP OP_HASH160 xxxx OP_EQUALVERIFY OP_CHECKSIG'
-            }
-        ],
-        locktime: Math.floor(new Date().getTime() / 1000),
-        version: 1,
-        txId: '123', //hash of transaction
-    }
-}
-
-
 //sign txins
-const {privateKey, publicKey} = crypto.generateKeyPairSync('ec', {namedCurve: 'secp256k1'});
+const {privateKey, publicKey} = generateKeyPairSync('ec', {namedCurve: 'secp256k1'});
 transaction.txins.forEach((txin, index) => {
     const signature = transactions.signTxin(transaction, index, privateKey);
     txin.verifyScript = `${signature} ${publicKey}`
 });
 
-transaction.txId = '';
+transaction.txId = transactions.hashTransaction(transaction);
+
+opCodes.runVerifyScript(transaction, 0);
 
 console.log(transaction.toString());
 
