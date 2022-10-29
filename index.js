@@ -1,6 +1,7 @@
-const {transactions} = require('./utils');
+const {transactions, crypto} = require('./utils');
 const opCodes = require('./op_codes');
 const {generateKeyPairSync} = require('crypto');
+const storage = require("./storage");
 
 //add address version field to tranaction
 //sighash - which parts of transaction are hashed for signature
@@ -36,7 +37,12 @@ transaction.txins.forEach((txin, index) => {
 
 transaction.txId = transactions.hashTransaction(transaction);
 
-opCodes.runVerifyScript(transaction, 0);
+transaction.txins.forEach((txin, index) => {
+    const prevTxout = storage.mongo.fetchTxout(txin.previousOutput, txin.vout);
+
+    let stack = opCodes.runVerifyScript(txin.verifyScript);
+    stack = opCodes.runVerifyScript(prevTxout.script, stack, transaction, index);
+});
 
 console.log(transaction.toString());
 

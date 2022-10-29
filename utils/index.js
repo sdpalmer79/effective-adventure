@@ -3,7 +3,8 @@ const transactions = require('./transactions');
 
 module.exports = {
     crypto: {
-        hash: (data) => crypto.hash(data),
+        hash: (data) => crypto.hash(data, 'sha256'),
+        hashRipemd160: (data) => crypto.hash(data, 'ripemd160'),
         signData: (privateKey, data) => crypto.signData(privateKey, data),
         verifySign: (publicKey, signature, data) => crypto.verifySign(publicKey, signature, data)
     },

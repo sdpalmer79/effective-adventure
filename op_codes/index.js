@@ -16,7 +16,8 @@ function equalVerify(stack) {
 
 function hash160(stack) {
     const val1 = stack.pop();
-    stack.push(crypto.hash(crypto.hash(val1)));
+    const digest = crypto.hashRipemd160(crypto.hash(crypto.hash(val1)));
+    stack.push(digest);
 }
 
 function checkSig(stack, transaction, txinIndex) {
@@ -27,13 +28,11 @@ function checkSig(stack, transaction, txinIndex) {
 }
 
 module.exports = {
-    runVerifyScript: (transaction, txinIndex) => {
-        const stack = [];
-        //const
-        const prevTxout = storage.mongo.fetchTxout(txin.previousOutput, txin.vout);
-        const verifyScript = transaction.txins[txinIndex].verifyScript;
-
-        verifyScript.split(' ').forEach((opcode) => {
+    runVerifyScript: (script, stack, transaction, txinIndex) => {
+        if (!stack) {
+            stack = [];
+        }
+        script.split(' ').forEach((opcode) => {
             switch (opcode) {
                 case 'OP_DUP':
                     dup(stack);
@@ -41,7 +40,7 @@ module.exports = {
                 case 'OP_EQUALVERIFY':
                     equalVerify(stack);
                     break;
-                case 'HASH160':
+                case 'OP_HASH160':
                     hash160(stack)
                     break;
                 case 'OP_CHECKSIG':
@@ -51,5 +50,6 @@ module.exports = {
                     stack.push(opcode);
             }
         });
+        return stack;
     }
 }
