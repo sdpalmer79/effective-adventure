@@ -2,6 +2,6 @@ const mongo = require('./mongo');
 
 module.exports = {
     mongo: {
-        fetchTxout: () => mongo.fetchTxout()
+        fetchTxout: (transactionId) => mongo.fetchTxout(transactionId)
     }
 }

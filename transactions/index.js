@@ -1,6 +1,5 @@
 const storage = require('../storage');
-const aaa = require("./index");
-const {signData, hash} = require("./index").crypto;
+const crypto = require('../cryptoUtils');
 
 function getTxinDataForSign(transaction, indexToSign) {
     const txin = transaction.txins[indexToSign];
@@ -30,11 +29,11 @@ function getTxinDataForHash(transaction) {
 module.exports = {
     getTxinDataForSign: (transaction, indexToSign) => getTxinDataForSign(transaction, indexToSign),
     signTxin: (transaction, indexToSign, privateKey) => {
-        const dataToSign = getTxinDataForSign(transaction, indexToSign, privateKey)
-        return signData(privateKey, hash(hash(dataToSign)));
+        const dataToSign = getTxinDataForSign(transaction, indexToSign)
+        return crypto.signData(privateKey, crypto.hash256(crypto.hash256(dataToSign)));
     },
     hashTransaction: (transaction) => {
         const dataToHash = getTxinDataForHash(transaction);
-        return hash(hash(dataToHash));
+        return crypto.hash256(crypto.hash256(dataToHash));
     }
 };

@@ -1,6 +1,5 @@
-const transactions = require('../utils/transactions');
-const crypto = require('../utils/crypto');
-const storage = require("../storage");
+const transactions = require('../transactions');
+const crypto = require('../cryptoUtils');
 
 function dup(stack) {
     const val = stack.pop();
@@ -16,8 +15,14 @@ function equalVerify(stack) {
 
 function hash160(stack) {
     const val1 = stack.pop();
-    const digest = crypto.hashRipemd160(crypto.hash(crypto.hash(val1)));
+    const digest = crypto.hashRipemd160(crypto.hash256(crypto.hash256(val1)));
     stack.push(digest);
+}
+
+function verify(stack){
+    if (!stack.pop()){
+        throw new Error('Script error')
+    }
 }
 
 function checkSig(stack, transaction, txinIndex) {
@@ -34,17 +39,20 @@ module.exports = {
         }
         script.split(' ').forEach((opcode) => {
             switch (opcode) {
+                case 'OP_CHECKSIG':
+                    checkSig(stack, transaction, txinIndex);
+                    break;
                 case 'OP_DUP':
                     dup(stack);
                     break;
-                case 'OP_EQUALVERIFY':
+                case 'OP_EQUAL':
                     equalVerify(stack);
                     break;
                 case 'OP_HASH160':
                     hash160(stack)
                     break;
-                case 'OP_CHECKSIG':
-                    checkSig(stack, transaction, txinIndex);
+                case 'OP_VERIFY':
+                    verify(stack);
                     break;
                 default:
                     stack.push(opcode);
